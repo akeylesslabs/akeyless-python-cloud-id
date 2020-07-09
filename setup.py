@@ -1,4 +1,4 @@
-from setuptools import find_packages, setup  # noqa: H301
+from setuptools import find_packages, setup
 
 NAME = "akeyless-cloud-id"
 VERSION = "0.1.1"
@@ -14,7 +14,7 @@ REQUIRES = ["urllib3 >= 1.15", "python-dateutil"]
 setup(
     name=NAME,
     version=VERSION,
-    description="AKEYLESS Cloud Id retriever",
+    description="AKEYLESS Cloud ID Retriever",
     author="Dmitry Gorochovsky",
     author_email="dgoro@akeyless.io",
     url="https://www.akeyless.io/",
@@ -24,6 +24,6 @@ setup(
     include_package_data=True,
     license="Apache 2.0",
     long_description="""\
-    Akeyless cloud id retriever  # noqa: E501
+    Akeyless cloud id retriever
     """
 )
