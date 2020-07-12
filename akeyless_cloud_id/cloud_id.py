@@ -27,7 +27,7 @@ def getSignatureKey(key, dateStamp, regionName, serviceName):
 
 
 class CloudId:
-    def __init__(self):
+    def generate(self):
         session = boto3.session.Session()
         credentials = session.get_credentials()
 
