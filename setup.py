@@ -9,7 +9,7 @@ VERSION = "0.1.1"
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
 
-REQUIRES = ["urllib3 >= 1.15", "python-dateutil"]
+REQUIRES = ["urllib3 >= 1.15", "boto3", "requests"]
 
 setup(
     name=NAME,
