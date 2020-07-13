@@ -9,8 +9,6 @@ import os
 import sys
 import urllib
 
-import boto3
-
 
 # Key derivation functions. See:
 # http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-python
@@ -27,10 +25,7 @@ def getSignatureKey(key, dateStamp, regionName, serviceName):
 
 
 class CloudId:
-    def generate(self):
-        session = boto3.session.Session()
-        credentials = session.get_credentials()
-
+    def generate(self, aws_access_key, aws_access_id):
         algorithm = 'AWS4-HMAC-SHA256'
         service = "sts"
         region = "us-east-1"
@@ -43,7 +38,7 @@ class CloudId:
         amzdate = t.strftime('%Y%m%dT%H%M%SZ')
         datestamp = t.strftime('%Y%m%d')
         raw_query = ''
-        secret_key = credentials.secret_key
+        secret_key = aws_access_id
 
         credential_scope = datestamp + '/' + region + '/' + service + '/' + 'aws4_request'
 
@@ -68,7 +63,7 @@ class CloudId:
             'utf-8'), hashlib.sha256).hexdigest()
 
         auth = '{} Credential={}/{},  SignedHeaders={}, Signature={}'.format(
-            algorithm, credentials.access_key, credential_scope, signed_headers, signature)
+            algorithm, aws_access_key, credential_scope, signed_headers, signature)
         headers = {}
         headers['Authorization'] = [auth]
         headers['Content-Length'] = [str(len(body))]
