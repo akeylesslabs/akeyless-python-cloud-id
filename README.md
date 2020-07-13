@@ -5,6 +5,10 @@ Currently only AWS cloud supported. In order to get cloud identity you should im
 If no aws access id/key and token provided they will be retrieved authomatically from default session.
 
 ```
+pip install git+https://github.com/akeylesslabs/akeyless-python-cloud-id
+```
+
+```
 from akeyless_cloud_id import CloudId
 
 cloud_id = CloudId()
