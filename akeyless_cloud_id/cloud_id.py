@@ -9,6 +9,8 @@ import os
 import sys
 import urllib
 
+import boto3
+
 
 # Key derivation functions. See:
 # http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-python
@@ -25,7 +27,7 @@ def getSignatureKey(key, dateStamp, regionName, serviceName):
 
 
 class CloudId:
-    def generate(self, aws_access_key, aws_access_id):
+    def generate(self, aws_access_id, aws_secret_access_key, security_token):
         algorithm = 'AWS4-HMAC-SHA256'
         service = "sts"
         region = "us-east-1"
@@ -38,16 +40,15 @@ class CloudId:
         amzdate = t.strftime('%Y%m%dT%H%M%SZ')
         datestamp = t.strftime('%Y%m%d')
         raw_query = ''
-        secret_key = aws_access_id
 
         credential_scope = datestamp + '/' + region + '/' + service + '/' + 'aws4_request'
 
         canonical_uri = '/'
-        signed_headers = 'content-length;content-type;host;x-amz-date'
+        signed_headers = 'content-length;content-type;host;x-amz-date;x-amz-security-token'
 
         body_digest = hashlib.sha256((body).encode('utf-8')).hexdigest()
-        canonical_headers = 'content-length:{}\ncontent-type:{}\nhost:{}\nx-amz-date:{}\n'.format(
-            len(body), content_type, host, amzdate)
+        canonical_headers = 'content-length:{}\ncontent-type:{}\nhost:{}\nx-amz-date:{}\nx-amz-security-token:{}\n'.format(
+            len(body), content_type, host, amzdate, security_token)
         canonical_request = method + '\n' + canonical_uri + '\n' + raw_query + \
             '\n' + canonical_headers + '\n' + signed_headers + '\n' + body_digest
         canonical_header_hash = hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()
@@ -56,20 +57,21 @@ class CloudId:
             '\n' + hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()
 
         # Create the signing key using the function defined above.
-        signing_key = getSignatureKey(secret_key, datestamp, region, service)
+        signing_key = getSignatureKey(aws_secret_access_key, datestamp, region, service)
 
         # Sign the string_to_sign using the signing_key
         signature = hmac.new(signing_key, (string_to_sign).encode(
             'utf-8'), hashlib.sha256).hexdigest()
 
         auth = '{} Credential={}/{},  SignedHeaders={}, Signature={}'.format(
-            algorithm, aws_access_key, credential_scope, signed_headers, signature)
+            algorithm, aws_access_id, credential_scope, signed_headers, signature)
         headers = {}
         headers['Authorization'] = [auth]
         headers['Content-Length'] = [str(len(body))]
         headers['Content-Type'] = [content_type]
         headers['User-Agent'] = ['aws-sdk-python']
         headers['X-Amz-Date'] = [amzdate]
+        headers['X-Amz-Security-Token'] = [security_token]
 
         headersJson = json.dumps(headers)
         awsData = {}
