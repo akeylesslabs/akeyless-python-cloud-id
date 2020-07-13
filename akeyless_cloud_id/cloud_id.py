@@ -27,7 +27,7 @@ def getSignatureKey(key, dateStamp, regionName, serviceName):
 
 
 class CloudId:
-    def generate(self, aws_access_id, aws_secret_access_key, security_token):
+    def generate(self, aws_access_id="", aws_secret_access_key="", security_token=""):
         algorithm = 'AWS4-HMAC-SHA256'
         service = "sts"
         region = "us-east-1"
@@ -35,6 +35,14 @@ class CloudId:
         host = 'sts.amazonaws.com'
         content_type = 'application/x-www-form-urlencoded; charset=utf-8'
         body = 'Action=GetCallerIdentity&Version=2011-06-15'
+
+        if not aws_access_id or not aws_secret_access_key or not security_token:
+            print('Credentials not specified. Using default session')
+            session = boto3.session.Session()
+            credentials = session.get_credentials()
+            aws_access_id = credentials.access_key
+            aws_secret_access_key = credentials.secret_key
+            security_token = credentials.token
 
         t = datetime.datetime.utcnow()
         amzdate = t.strftime('%Y%m%dT%H%M%SZ')
