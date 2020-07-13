@@ -18,6 +18,13 @@ id = cloud_id.generate()
 Such code can be used, for example, in order to retrieve secrets from Akeyless as part of AWS Code Pipeline:
 
 ```
+pip install git+https://github.com/akeylesslabs/akeyless-python-sdk
+```
+
+```
+import akeyless_api_gateway
+from akeyless_cloud_id import CloudId
+
 configuration = akeyless_api_gateway.Configuration(
     host="http://<api-gateway-host>:<port>"
 )
