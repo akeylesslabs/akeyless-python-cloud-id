@@ -12,10 +12,8 @@ from akeyless_cloud_id import CloudId
 
 # Defining the host is optional and defaults to https://127.0.0.1:8080
 # See configuration.py for a list of all supported configuration parameters.
-configuration = akeyless_api_gateway.Configuration(
-    host="http://<api-gateway-host>:<port>"
-)
-
+configuration = akeyless_api_gateway.Configuration()
+configuration.host="http://<api-gateway-host>:<port>"
 
 def lambda_handler(event, context):
     logger = logging.getLogger()
@@ -34,24 +32,23 @@ def lambda_handler(event, context):
         aws_secret_access_key = credentials.secret_key
         security_token = credentials.token
 
-        with akeyless_api_gateway.ApiClient(configuration) as api_client:
-            api_instance = akeyless_api_gateway.DefaultApi(api_client)
+        api_instance = akeyless_api_gateway.DefaultApi(akeyless_api_gateway.ApiClient(configuration))
 
-            user_parameters = event['CodePipeline.job']['data']['actionConfiguration']['configuration']['UserParameters']
-            params = user_parameters.split(':')
-            access_id = params[0]
-            secret_name = params[1]
-            access_type = 'aws_iam'
+        user_parameters = event['CodePipeline.job']['data']['actionConfiguration']['configuration']['UserParameters']
+        params = user_parameters.split(':')
+        access_id = params[0]
+        secret_name = params[1]
+        access_type = 'aws_iam'
 
-            cloud_id = CloudId()
-            # you can also call this function with empty parameters so it will retrieve credentials by itself: cloud_id.generate()
-            id = cloud_id.generate(aws_access_id, aws_secret_access_key, security_token)
+        cloud_id = CloudId()
+        # you can also call this function with empty parameters so it will retrieve credentials by itself: cloud_id.generate()
+        id = cloud_id.generate(aws_access_id, aws_secret_access_key, security_token)
 
-            auth_response = api_instance.auth(access_id, access_type=access_type, cloud_id=id)
-            token = auth_response.token
+        auth_response = api_instance.auth(access_id, access_type=access_type, cloud_id=id)
+        token = auth_response.token
 
-            secret_val_res = api_instance.get_secret_value(secret_name, token)
-            logger.info('Secret value: ' + secret_val_res.response[0])
+        secret_val_res = api_instance.get_secret_value(secret_name, token)
+        logger.info('Secret value: ' + secret_val_res.response[0])
 
         response = codepipeline.put_job_success_result(jobId=job_id)
 
