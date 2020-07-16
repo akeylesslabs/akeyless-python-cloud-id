@@ -25,12 +25,10 @@ pip install git+https://github.com/akeylesslabs/akeyless-python-sdk
 import akeyless_api_gateway
 from akeyless_cloud_id import CloudId
 
-configuration = akeyless_api_gateway.Configuration(
-    host="http://<api-gateway-host>:<port>"
-)
+configuration = akeyless_api_gateway.Configuration()
+configuration.host="http://<api-gateway-host>:<port>"
 
-api_client = akeyless_api_gateway.ApiClient(configuration)
-api_instance = akeyless_api_gateway.DefaultApi(api_client)
+api_instance = akeyless_api_gateway.DefaultApi(akeyless_api_gateway.ApiClient(configuration))
 
 cloud_id = CloudId()
 id = cloud_id.generate()
