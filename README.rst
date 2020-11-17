@@ -4,7 +4,7 @@ Akeyless Python Cloud Id
 
 Retrieves cloud identity
 
-Currently only AWS cloud supported. In order to get cloud identity you should import this package and call to generate method. 
+Currently only AWS and Azure clouds supported. In order to get cloud identity you should import this package and call to generate method. 
 If no aws access id/key and token provided they will be retrieved authomatically from default session.
 
 Minimum requirements
