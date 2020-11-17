@@ -8,8 +8,8 @@ import json
 import os
 import sys
 import urllib
-
 import boto3
+import requests
 
 
 # Key derivation functions. See:
@@ -25,8 +25,17 @@ def getSignatureKey(key, dateStamp, regionName, serviceName):
     kSigning = sign(kService, 'aws4_request')
     return kSigning
 
-
 class CloudId:
+    
+    def generateAzure(self, object_id=""):
+        headers = {'user-agent': 'AKEYLESS', 'Metadata':'true'}
+        ploads = {'api-version':'2018-02-01','resource':'https://management.azure.com/', 'object_id':object_id}
+        r = requests.get("http://169.254.169.254/metadata/identity/oauth2/token",params=ploads,headers=headers )
+        response_data = json.loads(r.text)
+        result = response_data.get('access_token')
+        return result
+
+
     def generate(self, aws_access_id="", aws_secret_access_key="", security_token=""):
         algorithm = 'AWS4-HMAC-SHA256'
         service = "sts"
