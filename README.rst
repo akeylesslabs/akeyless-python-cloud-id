@@ -39,7 +39,10 @@ Such code can be used, for example, in order to retrieve secrets from Akeyless a
     api_instance = akeyless_api_gateway.DefaultApi(akeyless_api_gateway.ApiClient(configuration))
 
     cloud_id = CloudId()
+    # for AWS use:
     id = cloud_id.generate()
+    # For Azure use:
+    id = cloud_id.generateAzure()
 
     access_id = event['CodePipeline.job']['data']['actionConfiguration']['configuration']['UserParameters']
 
