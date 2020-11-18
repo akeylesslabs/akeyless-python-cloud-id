@@ -33,7 +33,8 @@ class CloudId:
         r = requests.get("http://169.254.169.254/metadata/identity/oauth2/token",params=ploads,headers=headers )
         response_data = json.loads(r.text)
         result = response_data.get('access_token')
-        return result
+        cloud_id = base64.b64encode(result.encode()).decode()
+        return cloud_id
 
 
     def generate(self, aws_access_id="", aws_secret_access_key="", security_token=""):
