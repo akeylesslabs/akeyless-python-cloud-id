@@ -10,7 +10,10 @@ import sys
 import urllib
 import boto3
 import requests
-
+import google
+import google.oauth2.credentials
+from google.auth import compute_engine
+import google.auth.transport.requests
 
 # Key derivation functions. See:
 # http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-python
@@ -36,6 +39,13 @@ class CloudId:
         cloud_id = base64.b64encode(result.encode()).decode()
         return cloud_id
 
+    def generateGcp(self, audience="akeyless.io"):
+        request = google.auth.transport.requests.Request()
+        credentials = compute_engine.IDTokenCredentials(
+        request=request, target_audience=audience, use_metadata_identity_endpoint=True)
+        credentials.refresh(request)
+        cloud_id = base64.b64encode(credentials.token.encode()).decode()
+        return cloud_id
 
     def generate(self, aws_access_id="", aws_secret_access_key="", security_token=""):
         algorithm = 'AWS4-HMAC-SHA256'
