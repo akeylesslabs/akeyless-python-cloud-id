@@ -16,6 +16,8 @@ cloud_id = CloudId()
 id = cloud_id.generate()
 # for Azure:
 id = cloud_id.generateAzure()
+# for GCP:
+id = cloud_id.generateGcp()
 ```
 
 Such code can be used, for example, in order to retrieve secrets from Akeyless as part of AWS Code Pipeline:
@@ -36,6 +38,7 @@ api_instance = akeyless_api_gateway.DefaultApi(akeyless_api_gateway.ApiClient(co
 cloud_id = CloudId()
 id = cloud_id.generate()
 # for Azure use: id = cloud_id.generateAzure()
+# for GCP use: id = cloud_id.generateGcp()
 
 
 access_id = event['CodePipeline.job']['data']['actionConfiguration']['configuration']['UserParameters']

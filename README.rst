@@ -4,7 +4,7 @@ Akeyless Python Cloud Id
 
 Retrieves cloud identity
 
-Currently only AWS and Azure clouds supported. In order to get cloud identity you should import this package and call to generate method. 
+Currently only AWS, GCP and Azure clouds supported. In order to get cloud identity you should import this package and call to generate method.
 If no aws access id/key and token provided they will be retrieved authomatically from default session.
 
 Minimum requirements
@@ -14,6 +14,7 @@ Minimum requirements
 * urllib3 >= 1.15
 * requests
 * boto3
+* google-api-python-client
 
 Installation
 ============
@@ -43,6 +44,8 @@ Such code can be used, for example, in order to retrieve secrets from Akeyless a
     id = cloud_id.generate()
     # For Azure use:
     id = cloud_id.generateAzure()
+    # For GCP use:
+    id = cloud_id.generateGcp()
 
     access_id = event['CodePipeline.job']['data']['actionConfiguration']['configuration']['UserParameters']
 
