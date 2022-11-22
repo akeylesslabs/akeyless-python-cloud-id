@@ -14,6 +14,7 @@ Minimum requirements
 * urllib3 >= 1.15
 * requests
 * boto3
+* google
 * google-api-python-client
 
 Installation

@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 HERE = os.path.abspath(os.path.dirname(__file__))
 VERSION_RE = re.compile(r"""__version__ = ['"]([0-9.]+)['"]""")
 
-REQUIRES = ["urllib3 >= 1.15", "requests", "boto3"]
+REQUIRES = ["urllib3 >= 1.15", "requests", "boto3", "google", "google-api-python-client"]
 
 
 def read(*args):
