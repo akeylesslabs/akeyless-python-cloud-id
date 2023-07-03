@@ -57,7 +57,6 @@ class CloudId:
         body = 'Action=GetCallerIdentity&Version=2011-06-15'
 
         if not aws_access_id or not aws_secret_access_key or not security_token:
-            print('Credentials not specified. Using default session')
             session = boto3.session.Session()
             credentials = session.get_credentials()
             aws_access_id = credentials.access_key
