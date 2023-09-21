@@ -4,10 +4,12 @@ Retrieves cloud identity
 Currently only AWS cloud supported. In order to get cloud identity you should import this package and call to generate method. 
 If no aws access id/key and token provided they will be retrieved authomatically from default session.
 
+## Installing
 ```
 pip install git+https://github.com/akeylesslabs/akeyless-python-cloud-id
 ```
 
+## Usage
 ```
 from akeyless_cloud_id import CloudId
 
@@ -21,10 +23,6 @@ id = cloud_id.generateGcp()
 ```
 
 Such code can be used, for example, in order to retrieve secrets from Akeyless as part of AWS Code Pipeline:
-
-```
-pip install git+https://github.com/akeylesslabs/akeyless-python-sdk
-```
 
 ```
 import akeyless_api_gateway
@@ -48,4 +46,25 @@ token = auth_response.token
 
 postgresPassword = api_instance.get_secret_value("PostgresPassword", token)
 
+```
+
+# Build & Release
+
+If you want to release a new version, make sure to do the following:
+
+- Update the version (`__version__`) value in `akeyless_cloud_id/__init__.py` with accordance to https://semver.org
+  - If anything changed in the dependency of packages, or in the description meant to be shown in PyPi, make sure to update the README.rst file accordingly!
+- Open a PR, get an approval and merge to **master**.
+- Locally checkout to **master** branch
+- Build pypi expected artifacts:
+```
+python3 setup.py sdist bdist_wheel
+```
+- Validate artifacts:
+```
+twine check dist/*
+```
+- Upload artifacts to PyPi:
+```
+python3 -m twine upload dist/*
 ```
