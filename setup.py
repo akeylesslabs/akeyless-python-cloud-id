@@ -5,17 +5,19 @@ from setuptools import find_packages, setup
 HERE = os.path.abspath(os.path.dirname(__file__))
 VERSION_RE = re.compile(r"""__version__ = ['"]([0-9.]+)['"]""")
 
-REQUIRES = ["urllib3 >= 1.15", "requests", "boto3", "google", "google-api-python-client"]
+REQUIRES = ["urllib3 >= 1.15", "requests", "boto3", "google-auth"]
 
 
 def read(*args):
     """Reads complete file contents."""
     return open(os.path.join(HERE, *args)).read()
 
+
 def get_version():
     """Reads the version from this module."""
     init = read("akeyless_cloud_id", "__init__.py")
     return VERSION_RE.search(init).group(1)
+
 
 setup(
     name="akeyless_cloud_id",

@@ -1,2 +1,7 @@
 __pycache__/__init__.cpython-38.pyc
 .vscode/settings.json
+dist
+build
+.idea
+venv
+akeyless_cloud_id.egg-info

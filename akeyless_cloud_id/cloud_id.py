@@ -5,15 +5,11 @@ import datetime
 import hashlib
 import hmac
 import json
-import os
-import sys
-import urllib
 import boto3
 import requests
-import google
-import google.oauth2.credentials
 from google.auth import compute_engine
 import google.auth.transport.requests
+
 
 # Key derivation functions. See:
 # http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-python
@@ -28,12 +24,12 @@ def getSignatureKey(key, dateStamp, regionName, serviceName):
     kSigning = sign(kService, 'aws4_request')
     return kSigning
 
+
 class CloudId:
-    
     def generateAzure(self, object_id=""):
-        headers = {'user-agent': 'AKEYLESS', 'Metadata':'true'}
-        ploads = {'api-version':'2018-02-01','resource':'https://management.azure.com/', 'object_id':object_id}
-        r = requests.get("http://169.254.169.254/metadata/identity/oauth2/token",params=ploads,headers=headers )
+        headers = {'user-agent': 'AKEYLESS', 'Metadata': 'true'}
+        ploads = {'api-version': '2018-02-01','resource': 'https://management.azure.com/', 'object_id': object_id}
+        r = requests.get("http://169.254.169.254/metadata/identity/oauth2/token", params=ploads, headers=headers )
         response_data = json.loads(r.text)
         result = response_data.get('access_token')
         cloud_id = base64.b64encode(result.encode()).decode()
@@ -42,7 +38,7 @@ class CloudId:
     def generateGcp(self, audience="akeyless.io"):
         request = google.auth.transport.requests.Request()
         credentials = compute_engine.IDTokenCredentials(
-        request=request, target_audience=audience, use_metadata_identity_endpoint=True)
+            request=request, target_audience=audience, use_metadata_identity_endpoint=True)
         credentials.refresh(request)
         cloud_id = base64.b64encode(credentials.token.encode()).decode()
         return cloud_id
