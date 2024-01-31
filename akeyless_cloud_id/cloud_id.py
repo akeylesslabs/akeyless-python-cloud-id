@@ -5,10 +5,7 @@ import datetime
 import hashlib
 import hmac
 import json
-import boto3
 import requests
-from google.auth import compute_engine
-import google.auth.transport.requests
 
 
 # Key derivation functions. See:
@@ -36,6 +33,9 @@ class CloudId:
         return cloud_id
 
     def generateGcp(self, audience="akeyless.io"):
+        from google.auth import compute_engine
+        import google.auth.transport.requests
+
         request = google.auth.transport.requests.Request()
         credentials = compute_engine.IDTokenCredentials(
             request=request, target_audience=audience, use_metadata_identity_endpoint=True)
@@ -44,6 +44,8 @@ class CloudId:
         return cloud_id
 
     def generate(self, aws_access_id="", aws_secret_access_key="", security_token=""):
+        import boto3
+
         algorithm = 'AWS4-HMAC-SHA256'
         service = "sts"
         region = "us-east-1"
