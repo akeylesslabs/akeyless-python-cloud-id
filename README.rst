@@ -4,8 +4,11 @@ Akeyless Python Cloud Id
 
 Retrieves cloud identity
 
-Currently only AWS, GCP and Azure clouds supported. In order to get cloud identity you should import this package and call to generate method.
-If no aws access id/key and token provided they will be retrieved authomatically from default session.
+Currently, AWS, GCP and Azure clouds are supported.
+In order to get cloud identity you should import this package and call the relevant method per your chosen CSP:
+- AWS: "generate" (If no aws access id/key and token are provided they will be retrieved automatically from the default session.)
+- GCP: "generateGcp"
+- Azure: "generateAzure"
 
 Minimum requirements
 ====================
@@ -13,6 +16,10 @@ Minimum requirements
 * Python 3.5+
 * urllib3 >= 1.15
 * requests
+
+Optional Dependencies
+====================
+
 * boto3
 * google-auth
 
@@ -20,7 +27,31 @@ Installation
 ============
 
 .. code::
-    $pip install akeyless_api_gateway
+    pip install akeyless-python-cloud-id
+
+**AWS:**
+
+To install with AWS:
+
+.. code::
+
+    pip install akeyless-python-cloud-id[aws]
+
+The following additional packages will be installed:
+
+* boto3
+
+**GCP:**
+
+To install with GCP:
+
+.. code::
+
+    pip install akeyless-python-cloud-id[gcp]
+
+The following additional packages will be installed:
+
+* google-auth
 
 *****
 Usage

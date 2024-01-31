@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 HERE = os.path.abspath(os.path.dirname(__file__))
 VERSION_RE = re.compile(r"""__version__ = ['"]([0-9.]+)['"]""")
 
-REQUIRES = ["urllib3 >= 1.15", "requests", "boto3", "google-auth"]
+REQUIRES = ["urllib3 >= 1.15", "requests"]
 
 
 def read(*args):
@@ -28,6 +28,14 @@ setup(
     url="https://www.akeyless.io/",
     keywords=["AKEYLESS Cloud ID"],
     install_requires=REQUIRES,
+    extras_require={
+        'aws': [
+            'boto3',
+        ],
+        'gcp': [
+            'google-auth',
+        ],
+    },
     packages=find_packages(exclude=["test", "tests"]),
     include_package_data=True,
     license="Apache 2.0",
