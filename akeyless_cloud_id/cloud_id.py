@@ -24,14 +24,12 @@ def getSignatureKey(key, dateStamp, regionName, serviceName):
 
 class CloudId:
     def generateAzure(self, object_id=""):
-        from azure.identity import DefaultAzureCredential
-        
-        credential = DefaultAzureCredential()
-        
-        scope = "https://management.azure.com/.default"
-        token = credential.get_token(scope)
-       
-        cloud_id = base64.b64encode(token.token.encode()).decode()
+        headers = {'user-agent': 'AKEYLESS', 'Metadata': 'true'}
+        ploads = {'api-version': '2018-02-01','resource': 'https://management.azure.com/', 'object_id': object_id}
+        r = requests.get("http://169.254.169.254/metadata/identity/oauth2/token", params=ploads, headers=headers )
+        response_data = json.loads(r.text)
+        result = response_data.get('access_token')
+        cloud_id = base64.b64encode(result.encode()).decode()
         return cloud_id
 
     def generateGcp(self, audience="akeyless.io"):

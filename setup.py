@@ -35,9 +35,6 @@ setup(
         'gcp': [
             'google-auth',
         ],
-        'azure': [
-            ''  
-        ],
     },
     packages=find_packages(exclude=["test", "tests"]),
     include_package_data=True,
