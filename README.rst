@@ -22,6 +22,7 @@ Optional Dependencies
 
 * boto3
 * google-auth
+* azure-identity
 
 Installation
 ============
@@ -52,6 +53,16 @@ To install with GCP:
 The following additional packages will be installed:
 
 * google-auth
+
+To install with Azure:
+
+.. code::
+
+    pip install akeyless-python-cloud-id[azure]
+
+The following additional packages will be installed:
+
+* azure-identity
 
 *****
 Usage
