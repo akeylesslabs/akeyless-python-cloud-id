@@ -16,6 +16,9 @@ pip install git+https://github.com/akeylesslabs/akeyless-python-cloud-id[aws]
 
 # if using on GCP
 pip install git+https://github.com/akeylesslabs/akeyless-python-cloud-id[gcp]
+
+# if using on Azure
+pip install git+https://github.com/akeylesslabs/akeyless-python-cloud-id[azure]
 ```
 
 ## Usage
