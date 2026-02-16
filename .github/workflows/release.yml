@@ -7,7 +7,7 @@ on:
   workflow_dispatch:  # Allows manual triggering from GitHub Actions UI
     inputs:
       version:
-        description: 'Version to release (e.g., 0.3.1 - without the v prefix)'
+        description: 'Version to release (e.g., 0.3.1 or v0.3.1)'
         required: true
         type: string
 
@@ -35,6 +35,8 @@ jobs:
           else
             TAG_VERSION=${GITHUB_REF#refs/tags/v}
           fi
+          # Strip 'v' prefix if present (to handle both v0.3.1 and 0.3.1)
+          TAG_VERSION=${TAG_VERSION#v}
           echo "tag_version=$TAG_VERSION" >> $GITHUB_OUTPUT
           echo "Release version: $TAG_VERSION"
 
@@ -123,6 +125,8 @@ jobs:
           else
             VERSION=${GITHUB_REF#refs/tags/v}
           fi
+          # Strip 'v' prefix if present (to handle both v0.3.1 and 0.3.1)
+          VERSION=${VERSION#v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create or update GitHub Release
