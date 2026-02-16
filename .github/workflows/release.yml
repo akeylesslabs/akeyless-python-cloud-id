@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*.*.*'  # Trigger on version tags like v0.3.1, v1.0.0, etc.
+  workflow_dispatch:  # Allows manual triggering from GitHub Actions UI
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.3.1 - without the v prefix)'
+        required: true
+        type: string
 
 permissions:
   contents: write  # For creating GitHub releases
@@ -21,12 +27,16 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Extract version from tag
+      - name: Extract version from tag or input
         id: get_version
         run: |
-          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            TAG_VERSION="${{ github.event.inputs.version }}"
+          else
+            TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          fi
           echo "tag_version=$TAG_VERSION" >> $GITHUB_OUTPUT
-          echo "Tag version: $TAG_VERSION"
+          echo "Release version: $TAG_VERSION"
 
       - name: Extract version from __init__.py
         id: get_code_version
@@ -105,15 +115,20 @@ jobs:
           name: dist-artifacts
           path: dist/
 
-      - name: Extract version from tag
+      - name: Extract version from tag or input
         id: get_version
         run: |
-          TAG_VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release
+      - name: Create or update GitHub Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: v${{ steps.get_version.outputs.version }}
           name: Release v${{ steps.get_version.outputs.version }}
           draft: false
           prerelease: false
