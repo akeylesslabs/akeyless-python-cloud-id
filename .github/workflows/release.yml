@@ -1,0 +1,123 @@
+name: Release to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags like v0.3.1, v1.0.0, etc.
+
+permissions:
+  contents: write  # For creating GitHub releases
+  id-token: write  # For trusted publishing to PyPI
+
+jobs:
+  validate-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          echo "tag_version=$TAG_VERSION" >> $GITHUB_OUTPUT
+          echo "Tag version: $TAG_VERSION"
+
+      - name: Extract version from __init__.py
+        id: get_code_version
+        run: |
+          CODE_VERSION=$(grep -E "__version__ = ['\"]([0-9.]+)['\"]" akeyless_cloud_id/__init__.py | sed -E "s/__version__ = ['\"]([0-9.]+)['\"]/\1/")
+          echo "code_version=$CODE_VERSION" >> $GITHUB_OUTPUT
+          echo "Code version: $CODE_VERSION"
+
+      - name: Validate versions match
+        run: |
+          if [ "${{ steps.get_version.outputs.tag_version }}" != "${{ steps.get_code_version.outputs.code_version }}" ]; then
+            echo "Error: Tag version (${{ steps.get_version.outputs.tag_version }}) does not match code version (${{ steps.get_code_version.outputs.code_version }})"
+            exit 1
+          fi
+          echo "Version validation successful: ${{ steps.get_version.outputs.tag_version }}"
+
+  build:
+    needs: validate-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine wheel setuptools
+
+      - name: Build distribution packages
+        run: |
+          python -m build
+          # Also build using setup.py for backward compatibility
+          python setup.py sdist bdist_wheel
+
+      - name: Validate built artifacts
+        run: |
+          twine check dist/*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist/
+          retention-days: 5
+
+  publish-pypi:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # This uses trusted publishing - no password needed!
+        # Configure at: https://pypi.org/manage/account/publishing/
+
+  create-github-release:
+    needs: publish-pypi
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist/
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release v${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: false
+          files: dist/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

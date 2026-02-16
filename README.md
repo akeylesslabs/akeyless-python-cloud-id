@@ -62,21 +62,41 @@ postgresPassword = api_instance.get_secret_value("PostgresPassword", token)
 
 # Build & Release
 
-If you want to release a new version, make sure to do the following:
+The release process is automated via GitHub Actions. To release a new version:
 
-- Update the version (`__version__`) value in `akeyless_cloud_id/__init__.py` with accordance to https://semver.org
-  - If anything changed in the dependency of packages, or in the description meant to be shown in PyPi, make sure to update the README.rst file accordingly!
-- Open a PR, get an approval and merge to **master**.
-- Locally checkout to **master** branch
+1. **Update the version** in `akeyless_cloud_id/__init__.py` according to [Semantic Versioning](https://semver.org)
+   - If anything changed in the dependency of packages, or in the description meant to be shown in PyPi, make sure to update the `README.rst` file accordingly!
+
+2. **Open a PR** with your changes, get an approval and merge to **master**.
+
+3. **Create and push a version tag** from the master branch:
+   ```bash
+   git checkout master
+   git pull
+   git tag v0.3.1  # Use the same version as in __init__.py
+   git push origin v0.3.1
+   ```
+
+4. **Automated CI/CD** will:
+   - Validate that the tag version matches the code version
+   - Build the distribution packages (sdist and wheel)
+   - Validate the artifacts with twine
+   - Publish to PyPI (requires [trusted publishing](https://docs.pypi.org/trusted-publishers/) setup)
+   - Create a GitHub release with the artifacts
+
+## Manual Release (if needed)
+
+If you need to release manually:
+
 - Build pypi expected artifacts:
-```
-python3 setup.py sdist bdist_wheel
-```
+  ```bash
+  python3 setup.py sdist bdist_wheel
+  ```
 - Validate artifacts:
-```
-twine check dist/*
-```
+  ```bash
+  twine check dist/*
+  ```
 - Upload artifacts to PyPi:
-```
-python3 -m twine upload dist/*
-```
+  ```bash
+  python3 -m twine upload dist/*
+  ```
