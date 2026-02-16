@@ -10,6 +10,11 @@ on:
         description: 'Version to release (e.g., 0.3.1 or v0.3.1)'
         required: true
         type: string
+      auto_update_version:
+        description: 'Automatically update version in __init__.py (skip validation)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write  # For creating GitHub releases
@@ -21,6 +26,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -47,7 +54,26 @@ jobs:
           echo "code_version=$CODE_VERSION" >> $GITHUB_OUTPUT
           echo "Code version: $CODE_VERSION"
 
+      - name: Auto-update version in __init__.py
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.auto_update_version == 'true'
+        run: |
+          TARGET_VERSION="${{ steps.get_version.outputs.tag_version }}"
+          echo "Auto-updating version to $TARGET_VERSION"
+          sed -i "s/__version__ = ['\"][0-9.]*['\"]/__version__ = \"$TARGET_VERSION\"/" akeyless_cloud_id/__init__.py
+          
+          # Verify the change
+          NEW_VERSION=$(grep -E "__version__ = ['\"]([0-9.]+)['\"]" akeyless_cloud_id/__init__.py | sed -E "s/__version__ = ['\"]([0-9.]+)['\"]/\1/")
+          echo "Updated version to: $NEW_VERSION"
+          
+          # Commit and push the change
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add akeyless_cloud_id/__init__.py
+          git commit -m "Bump version to $TARGET_VERSION"
+          git push
+
       - name: Validate versions match
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.auto_update_version != 'true')
         run: |
           if [ "${{ steps.get_version.outputs.tag_version }}" != "${{ steps.get_code_version.outputs.code_version }}" ]; then
             echo "Error: Tag version (${{ steps.get_version.outputs.tag_version }}) does not match code version (${{ steps.get_code_version.outputs.code_version }})"
