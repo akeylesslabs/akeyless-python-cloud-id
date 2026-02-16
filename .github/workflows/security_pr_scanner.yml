@@ -1,17 +1,33 @@
-name: Security PR Scan
+name: Appsec center
 
-on: [pull_request]
+on:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  Scanning_with:
+  scan:
+    name: ${{ matrix.name }}
     uses: akeylesslabs/akeyless-security/.github/workflows/reusable-scanner.yaml@main
     strategy:
       fail-fast: false
       matrix:
-        scan_type: ["SAST", "SCA"]
+        include:
+          - name: SAST
+            scan_type: SAST
+            extra_options: ""
+          - name: SCA
+            scan_type: SCA
+            extra_options: ""
+          - name: Secrets
+            scan_type: Secrets
+            extra_options: ""
+          - name: IAC
+            scan_type: IAC
+            extra_options: ""
     with:
       branch_name: ${{ github.head_ref }}
       repository_name: ${{ github.repository }}
       event_name: ${{ github.event_name }}
       scan_type: ${{ matrix.scan_type }}
+      extra_options: ${{ matrix.extra_options }}
     secrets: inherit
