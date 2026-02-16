@@ -90,7 +90,7 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         # This uses trusted publishing - no password needed!
-        # Configure at: https://pypi.org/manage/account/publishing/
+        # Configure at: https://pypi.org/manage/project/akeyless-cloud-id/settings/publishing/
 
   create-github-release:
     needs: publish-pypi
