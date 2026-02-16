@@ -62,7 +62,9 @@ postgresPassword = api_instance.get_secret_value("PostgresPassword", token)
 
 # Build & Release
 
-The release process is automated via GitHub Actions. To release a new version:
+The release process is automated via GitHub Actions. There are two ways to release:
+
+## Method 1: Tag-based Release (Recommended for Production)
 
 1. **Update the version** in `akeyless_cloud_id/__init__.py` according to [Semantic Versioning](https://semver.org)
    - If anything changed in the dependency of packages, or in the description meant to be shown in PyPi, make sure to update the `README.rst` file accordingly!
@@ -77,12 +79,30 @@ The release process is automated via GitHub Actions. To release a new version:
    git push origin v0.3.1
    ```
 
-4. **Automated CI/CD** will:
-   - Validate that the tag version matches the code version
-   - Build the distribution packages (sdist and wheel)
-   - Validate the artifacts with twine
-   - Publish to PyPI (requires [trusted publishing](https://docs.pypi.org/trusted-publishers/) setup)
-   - Create a GitHub release with the artifacts
+4. **Automated CI/CD** will validate, build, and publish to PyPI.
+
+## Method 2: Manual Trigger from GitHub UI
+
+1. **Go to Actions tab**: https://github.com/akeylesslabs/akeyless-python-cloud-id/actions/workflows/release.yml
+
+2. **Click "Run workflow"**
+
+3. **Fill in the details**:
+   - **Branch**: `master` (or your target branch)
+   - **Version**: `0.3.1` (or `v0.3.1` - both formats work)
+   - **Auto-update version**: 
+     - ☑️ **Checked**: Automatically updates `__init__.py` and commits the change
+     - ☐ **Unchecked**: Validates that version in `__init__.py` already matches
+
+4. **Click "Run workflow"** - The CI will build and publish to PyPI
+
+### What the CI Does:
+
+- Validates version (or auto-updates if checkbox is checked)
+- Builds the distribution packages (sdist and wheel)
+- Validates the artifacts with twine
+- Publishes to PyPI (requires `publish-pypi` secret configured)
+- Creates a GitHub release with the artifacts
 
 ## Manual Release (if needed)
 
