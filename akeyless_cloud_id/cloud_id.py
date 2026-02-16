@@ -35,14 +35,33 @@ class CloudId:
         return cloud_id
 
     def generateGcp(self, audience="akeyless.io"):
+        import google.auth
         import google.auth.transport.requests
-        from google.oauth2 import id_token
+        from google.oauth2 import id_token, service_account
 
         request = google.auth.transport.requests.Request()
         
-        # Fetch ID token using default credentials
-        # This automatically handles service accounts, ADC, and compute engine
-        token = id_token.fetch_id_token(request, audience)
+        # Get default credentials to detect type
+        credentials, project = google.auth.default()
+        
+        # Service accounts work with fetch_id_token
+        if isinstance(credentials, service_account.Credentials):
+            token = id_token.fetch_id_token(request, audience)
+        # Check if user credentials have id_token (unlikely but possible)
+        elif hasattr(credentials, 'id_token') and credentials.id_token:
+            credentials.refresh(request)
+            token = credentials.id_token
+        else:
+            # Unsupported credential type
+            raise ValueError(
+                f"Unable to generate ID token from {type(credentials).__name__}. "
+                f"GCP authentication requires:\n"
+                f"1. Service account JSON: export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json\n"
+                f"2. GCE metadata server (when running on Google Cloud)\n"
+                f"3. Workload Identity (GKE)\n"
+                f"User credentials from 'gcloud auth application-default login' are not supported.\n"
+                f"Use 'gcloud auth application-default login --impersonate-service-account=SA@PROJECT.iam.gserviceaccount.com' instead."
+            )
         
         cloud_id = base64.b64encode(token.encode()).decode()
         return cloud_id

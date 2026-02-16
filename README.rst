@@ -97,6 +97,37 @@ Such code can be used, for example, in order to retrieve secrets from Akeyless a
     postgresPassword = api_instance.get_secret_value("PostgresPassword", token)
 
 
+GCP Authentication Requirements
+================================
+
+The ``generateGcp()`` method requires one of the following credential types:
+
+**Supported:**
+
+* ✅ **Service Account JSON**: Set ``GOOGLE_APPLICATION_CREDENTIALS`` environment variable
+
+  .. code::
+
+      export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+
+* ✅ **GCE Metadata Server**: Automatic when running on Google Compute Engine
+* ✅ **Workload Identity**: Automatic when running on Google Kubernetes Engine (GKE) with Workload Identity enabled
+
+**Not Supported:**
+
+* ❌ **User Credentials from ADC**: Running ``gcloud auth application-default login`` creates user credentials that cannot generate ID tokens
+
+**Workaround for User Credentials:**
+
+If you need to use user credentials for local development, use service account impersonation:
+
+.. code::
+
+    gcloud auth application-default login --impersonate-service-account=SERVICE_ACCOUNT@PROJECT.iam.gserviceaccount.com
+
+This requires the ``roles/iam.serviceAccountTokenCreator`` role on the service account.
+
+
 *******
 License
 *******
