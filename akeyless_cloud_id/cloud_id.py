@@ -41,7 +41,7 @@ class CloudId:
         request = google.auth.transport.requests.Request()
         
         # Fetch ID token using default credentials
-        # This automatically handles service accounts, ADC, and compute engine
+        # This automatically handles service accounts and compute engine
         token = id_token.fetch_id_token(request, audience)
         
         cloud_id = base64.b64encode(token.encode()).decode()
