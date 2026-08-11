@@ -19,12 +19,23 @@ Usage:
 import os
 import sys
 
+import pytest
+
 # Add the akeyless_cloud_id module to the path
 sys.path.insert(0, os.path.dirname(__file__))
 
 from akeyless_cloud_id import CloudId
 
 
+# Live GCP test: requires real credentials and reaches the GCP token/metadata
+# endpoint. Gated so it is skipped automatically in CI (which has no secrets).
+# Set GOOGLE_APPLICATION_CREDENTIALS (or GCE_METADATA_HOST for a GCE instance)
+# to run it.
+@pytest.mark.skipif(
+    os.getenv("GOOGLE_APPLICATION_CREDENTIALS") is None
+    and os.getenv("GCE_METADATA_HOST") is None,
+    reason="live GCP credentials not present (set GOOGLE_APPLICATION_CREDENTIALS to run)",
+)
 def test_gcp_authentication():
     """Test GCP authentication with different credential sources."""
     
