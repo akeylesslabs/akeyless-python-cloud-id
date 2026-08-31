@@ -2,7 +2,10 @@
 
 import base64
 import json
+from urllib.error import URLError
 from urllib.parse import parse_qs, urlparse
+
+import pytest
 
 from akeyless_cloud_id import CloudId
 from akeyless_cloud_id import cloud_id as cloud_id_module
@@ -86,3 +89,118 @@ def test_alibaba_rpc_string_to_sign_is_deterministic():
         "%26Version%3D2015-04-01"
     )
     assert signature == "dSCqL2sSKYDmcOcAj2Grhpar/wE="
+
+
+class _FakeResponse:
+    def __init__(self, body):
+        self._body = body.encode("utf-8") if isinstance(body, str) else body
+
+    def read(self):
+        return self._body
+
+
+def _req_url(req):
+    return getattr(req, "full_url", req)
+
+
+def _req_method(req):
+    if hasattr(req, "get_method"):
+        return req.get_method()
+    return "GET"
+
+
+def _req_header(req, name):
+    headers = {}
+    for attr in ("headers", "unredirected_hdrs"):
+        headers.update({k.lower(): v for k, v in getattr(req, attr, {}).items()})
+    return headers.get(name.lower())
+
+
+def test_ecs_ram_role_uses_metadata_token(monkeypatch):
+    calls = []
+
+    def fake_urlopen(req, timeout=None):
+        url = _req_url(req)
+        calls.append((_req_method(req), url, timeout))
+        if url == cloud_id_module._ALIBABA_ECS_METADATA_TOKEN_URL:
+            assert _req_method(req) == "PUT"
+            assert _req_header(req, "X-aliyun-ecs-metadata-token-ttl-seconds") == (
+                cloud_id_module._ALIBABA_ECS_METADATA_TOKEN_TTL_SECONDS
+            )
+            return _FakeResponse("ecs-token")
+        if url == cloud_id_module._ALIBABA_ECS_ROLE_URL:
+            assert _req_header(req, "X-aliyun-ecs-metadata-token") == "ecs-token"
+            return _FakeResponse("my-role")
+        if url == cloud_id_module._ALIBABA_ECS_ROLE_URL + "my-role":
+            assert _req_header(req, "X-aliyun-ecs-metadata-token") == "ecs-token"
+            return _FakeResponse(json.dumps({
+                "AccessKeyId": "AKI",
+                "AccessKeySecret": "SEC",
+                "SecurityToken": "TOK",
+            }))
+        raise AssertionError("unexpected url %s" % url)
+
+    monkeypatch.setattr(cloud_id_module, "urlopen", fake_urlopen)
+    assert cloud_id_module._resolve_alibaba_ecs_ram_role() == ("AKI", "SEC", "TOK")
+    assert [method for method, _, _ in calls] == ["PUT", "GET", "GET"]
+
+
+def test_ecs_ram_role_falls_back_to_imdsv1_when_token_unavailable(monkeypatch):
+    def fake_urlopen(req, timeout=None):
+        url = _req_url(req)
+        if url == cloud_id_module._ALIBABA_ECS_METADATA_TOKEN_URL:
+            raise URLError("imdsv2 unavailable")
+        assert _req_header(req, "X-aliyun-ecs-metadata-token") is None
+        if url == cloud_id_module._ALIBABA_ECS_ROLE_URL:
+            return _FakeResponse("my-role")
+        if url == cloud_id_module._ALIBABA_ECS_ROLE_URL + "my-role":
+            return _FakeResponse(json.dumps({
+                "AccessKeyId": "AKI",
+                "AccessKeySecret": "SEC",
+                "SecurityToken": "TOK",
+            }))
+        raise AssertionError("unexpected url %s" % url)
+
+    monkeypatch.setattr(cloud_id_module, "urlopen", fake_urlopen)
+    monkeypatch.delenv("ALIBABA_CLOUD_IMDSV1_DISABLED", raising=False)
+    assert cloud_id_module._resolve_alibaba_ecs_ram_role() == ("AKI", "SEC", "TOK")
+
+
+def test_ecs_ram_role_does_not_fallback_when_imdsv1_disabled(monkeypatch):
+    def fake_urlopen(req, timeout=None):
+        if _req_url(req) == cloud_id_module._ALIBABA_ECS_METADATA_TOKEN_URL:
+            raise URLError("imdsv2 unavailable")
+        raise AssertionError("IMDSv1 fallback must not be used")
+
+    monkeypatch.setattr(cloud_id_module, "urlopen", fake_urlopen)
+    monkeypatch.setenv("ALIBABA_CLOUD_IMDSV1_DISABLED", "true")
+    with pytest.raises(URLError):
+        cloud_id_module._resolve_alibaba_ecs_ram_role()
+
+
+def test_ecs_ram_role_rejects_empty_role_name(monkeypatch):
+    def fake_urlopen(req, timeout=None):
+        url = _req_url(req)
+        if url == cloud_id_module._ALIBABA_ECS_METADATA_TOKEN_URL:
+            return _FakeResponse("ecs-token")
+        if url == cloud_id_module._ALIBABA_ECS_ROLE_URL:
+            return _FakeResponse("  ")
+        raise AssertionError("credentials url must not be requested for an empty role")
+
+    monkeypatch.setattr(cloud_id_module, "urlopen", fake_urlopen)
+    with pytest.raises(ValueError, match="alibaba credentials are missing"):
+        cloud_id_module._resolve_alibaba_ecs_ram_role()
+
+
+def test_ecs_ram_role_rejects_invalid_role_name(monkeypatch):
+    def fake_urlopen(req, timeout=None):
+        url = _req_url(req)
+        if url == cloud_id_module._ALIBABA_ECS_METADATA_TOKEN_URL:
+            return _FakeResponse("ecs-token")
+        if url == cloud_id_module._ALIBABA_ECS_ROLE_URL:
+            return _FakeResponse("../secret")
+        raise AssertionError("credentials url must not include an invalid role name")
+
+    monkeypatch.setattr(cloud_id_module, "urlopen", fake_urlopen)
+    with pytest.raises(ValueError, match="alibaba credentials are missing"):
+        cloud_id_module._resolve_alibaba_ecs_ram_role()

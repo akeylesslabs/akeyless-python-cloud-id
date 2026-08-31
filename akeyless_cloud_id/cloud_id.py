@@ -6,8 +6,9 @@ import hashlib
 import hmac
 import json
 import os
+from urllib.error import URLError
 from urllib.parse import quote_plus
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 
 _ALIBABA_DEFAULT_REGION = "cn-hangzhou"
@@ -16,6 +17,12 @@ _ALIBABA_STS_API_VERSION = "2015-04-01"
 _ALIBABA_STS_API_ACTION = "GetCallerIdentity"
 _ALIBABA_STS_API_FORMAT = "JSON"
 _ALIBABA_SIGNATURE_METHOD = "HMAC-SHA1"
+_ALIBABA_ECS_METADATA_TOKEN_URL = "http://100.100.100.200/latest/api/token"
+_ALIBABA_ECS_ROLE_URL = "http://100.100.100.200/latest/meta-data/ram/security-credentials/"
+_ALIBABA_ECS_METADATA_TOKEN_TTL_SECONDS = "21600"
+_ALIBABA_RAM_ROLE_NAME_ALLOWED = set(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+=,.@_-"
+)
 
 
 def _alibaba_query_escape(value):
@@ -57,12 +64,48 @@ def _resolve_alibaba_credentials():
     return _resolve_alibaba_ecs_ram_role()
 
 
+def _alibaba_imdsv1_disabled():
+    return os.environ.get("ALIBABA_CLOUD_IMDSV1_DISABLED", "").strip().lower() in ("1", "true", "yes")
+
+
+def _alibaba_ecs_open(url, method="GET", headers=None):
+    request = Request(url, method=method, headers=headers or {})
+    return urlopen(request, timeout=2).read().decode("utf-8")
+
+
+def _alibaba_ecs_metadata_token():
+    token = _alibaba_ecs_open(
+        _ALIBABA_ECS_METADATA_TOKEN_URL,
+        method="PUT",
+        headers={"X-aliyun-ecs-metadata-token-ttl-seconds": _ALIBABA_ECS_METADATA_TOKEN_TTL_SECONDS},
+    ).strip()
+    if not token:
+        raise ValueError("alibaba ecs metadata token is empty")
+    return token
+
+
+def _alibaba_ecs_get(url, token=""):
+    headers = {}
+    if token:
+        headers["X-aliyun-ecs-metadata-token"] = token
+    return _alibaba_ecs_open(url, headers=headers)
+
+
+def _alibaba_valid_ram_role_name(role_name):
+    return bool(role_name) and all(ch in _ALIBABA_RAM_ROLE_NAME_ALLOWED for ch in role_name)
+
+
 def _resolve_alibaba_ecs_ram_role():
-    role_url = "http://100.100.100.200/latest/meta-data/ram/security-credentials/"
-    role_name = urlopen(role_url, timeout=2).read().decode("utf-8").strip()
-    if not role_name:
+    token = ""
+    try:
+        token = _alibaba_ecs_metadata_token()
+    except (URLError, OSError, ValueError):
+        if _alibaba_imdsv1_disabled():
+            raise
+    role_name = _alibaba_ecs_get(_ALIBABA_ECS_ROLE_URL, token).strip()
+    if not _alibaba_valid_ram_role_name(role_name):
         raise ValueError("alibaba credentials are missing access key id or secret")
-    creds = json.loads(urlopen(role_url + role_name, timeout=2).read().decode("utf-8"))
+    creds = json.loads(_alibaba_ecs_get(_ALIBABA_ECS_ROLE_URL + role_name, token))
     return creds.get("AccessKeyId", ""), creds.get("AccessKeySecret", ""), creds.get("SecurityToken", "")
 
 
