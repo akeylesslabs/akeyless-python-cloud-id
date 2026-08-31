@@ -1,11 +1,12 @@
 # Akeyless Python Cloud Id
 Retrieves cloud identity
 
-Currently, AWS, GCP and Azure clouds are supported.
+Currently, AWS, GCP, Azure and Alibaba Cloud are supported.
 In order to get cloud identity you should import this package and call the relevant method per your chosen CSP:
 - AWS: "generate" (If no aws access id/key and token are provided they will be retrieved automatically from the default session.)
 - GCP: "generateGcp"
 - Azure: "generateAzure"
+- Alibaba Cloud: "generateAlibaba" (If no access key/secret are provided they will be retrieved from environment variables or an ECS RAM role.)
 
 ## Installing
 ```
@@ -32,6 +33,8 @@ id = cloud_id.generate()
 id = cloud_id.generateAzure()
 # for GCP:
 id = cloud_id.generateGcp()
+# for Alibaba Cloud:
+id = cloud_id.generateAlibaba()
 ```
 
 Such code can be used, for example, in order to retrieve secrets from Akeyless as part of AWS Code Pipeline:
