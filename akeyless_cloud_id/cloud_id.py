@@ -26,7 +26,12 @@ _ALIBABA_RAM_ROLE_NAME_ALLOWED = set(
 
 
 def _alibaba_query_escape(value):
-    return quote_plus(str(value), safe="-._~").replace("%7E", "~")
+    return (
+        quote_plus(str(value), safe="-._~")
+        .replace("+", "%20")
+        .replace("*", "%2A")
+        .replace("%7E", "~")
+    )
 
 
 def _alibaba_encode_query_params(params):
@@ -38,7 +43,6 @@ def _alibaba_encode_query_params(params):
 
 def _alibaba_rpc_string_to_sign(method, query_params):
     encoded = _alibaba_encode_query_params(query_params)
-    encoded = encoded.replace("+", "%20").replace("*", "%2A").replace("%7E", "~")
     return method + "&%2F&" + _alibaba_query_escape(encoded)
 
 

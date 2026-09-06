@@ -91,6 +91,24 @@ def test_alibaba_rpc_string_to_sign_is_deterministic():
     assert signature == "dSCqL2sSKYDmcOcAj2Grhpar/wE="
 
 
+def test_alibaba_query_encoding_uses_percent_20_for_spaces():
+    encoded = cloud_id_module._alibaba_encode_query_params({"Note": "a b", "X": "c"})
+    assert encoded == "Note=a%20b&X=c"
+    assert "+" not in encoded
+    string_to_sign = cloud_id_module._alibaba_rpc_string_to_sign(
+        "POST", {"Action": "GetCallerIdentity", "Note": "a b"}
+    )
+    assert "a%2520b" in string_to_sign
+
+
+def test_generate_alibaba_encodes_spaces_in_request_url():
+    env = _decode_envelope(_cloud_id(security_token="SESSION TOKEN"))
+    url = base64.b64decode(env["sts_request_url"]).decode()
+    assert "SESSION%20TOKEN" in url
+    assert "SESSION+TOKEN" not in url
+    assert _query(url)["SecurityToken"] == "SESSION TOKEN"
+
+
 class _FakeResponse:
     def __init__(self, body):
         self._body = body.encode("utf-8") if isinstance(body, str) else body
