@@ -28,7 +28,7 @@ def test_version_exposed():
     assert akeyless_cloud_id.__version__
 
 
-@pytest.mark.parametrize("method_name", ["generate", "generateGcp", "generateAzure"])
+@pytest.mark.parametrize("method_name", ["generate", "generateGcp", "generateAzure", "generateAlibaba"])
 def test_provider_methods_exist(method_name):
     c = CloudId()
     assert callable(getattr(c, method_name))
