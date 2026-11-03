@@ -125,10 +125,8 @@ jobs:
           name: dist-artifacts
           path: dist/
 
-      - name: Publish to PyPI
+      - name: Publish to PyPI (trusted publishing via OIDC, no API token)
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
 
   create-github-release:
     needs: publish-pypi
